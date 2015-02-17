@@ -1,0 +1,25 @@
+{
+
+  project : {
+    name : 'Snake',
+    version : '1.0.0',
+    author : 'Darek Greenly',
+
+    app : {
+      name : '1Dodger',
+      package : 'pl.zielak.5snake'
+    },
+
+    build : {
+      dependencies : {
+        luxe : '*',
+      }
+    },
+
+    files : {
+      assets : 'assets/'
+    }
+
+  }
+
+}
