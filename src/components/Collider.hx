@@ -5,79 +5,50 @@ import luxe.Component;
 import luxe.collision.shapes.Shape;
 import luxe.collision.shapes.Circle;
 import luxe.collision.shapes.Polygon;
+import luxe.collision.ShapeDrawerLuxe;
 import luxe.collision.CollisionData;
+import luxe.Color;
 import luxe.collision.Collision;
 import luxe.Entity;
+import luxe.Rectangle;
 
 class Collider extends Component
 {
 
-
     public var shape:Shape;
 
-    public var testAgainst:String;
-    
-    public var hit:Bool = false;
-    public var coldata:CollisionData;
+    var drawer:ShapeDrawerLuxe;
 
-    var arr:Array<Entity>;
-    var otherComponent:Collider;
+    override public function new(_options:ColliderOptions)
+    {
+        super(_options);
+
+        shape = Polygon.rectangle(
+            _options.hitbox.x /2,
+            _options.hitbox.y /2,
+            _options.hitbox.w /2,
+            _options.hitbox.h /2
+        );
+    }
 
     override function init():Void
     {
-        arr = new Array<Entity>();
+        drawer = new ShapeDrawerLuxe();
 
-        entity.events.listen('collider.hit', function(_){
-            gotHit();
-        });
     } // init
 
 
     override function update(rate:Float):Void
     {
         shape.position = entity.pos;
-        hit = false;
 
-        if(hit) return;
-
-        arr = new Array<Entity>();
-        arr = Luxe.scene.get_named_like(testAgainst, arr);
-        // trace(arr.length);
-
-        for(t in arr)
-        {
-            // Check if has collider component (just like this one)
-            if(!t.has('collider'))
-            {
-                continue;
-            }
-
-
-            // Test if they collide!
-            otherComponent = cast(t.get('collider'), Collider);
-            coldata = Collision.test(shape, otherComponent.shape);
-            
-            if(coldata != null)
-            {
-                if(otherComponent.hit) continue;
-                
-                // Tell myself what I hit
-                gotHit();
-                
-                // Tell the other one, that i hit him!
-                otherComponent.entity.events.fire('collider.hit');
-                
-            }
-        }
-    }
-
-    function gotHit():Void
-    {
-        hit = true;
+        // drawer.drawPolygon( cast shape, new Color().rgb(0xff0000), true );
     }
 
 }
 
-// typedef CollisionEvent = {
-//     var entity:Entity;
-// }
+typedef ColliderOptions = {
+    > luxe.options.ComponentOptions,
+
+    var hitbox:Rectangle;
+}
