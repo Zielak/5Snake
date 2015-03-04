@@ -6,7 +6,7 @@
     author : 'Darek Greenly',
 
     app : {
-      name : '1Dodger',
+      name : '5Snake',
       package : 'pl.zielak.5snake'
     },
 
@@ -17,7 +17,8 @@
     },
 
     files : {
-      assets : 'assets/'
+      assets : 'assets/',
+      config : 'config.json',
     }
 
   }

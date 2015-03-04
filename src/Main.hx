@@ -27,6 +27,8 @@ class Main extends luxe.Game
 
         // size and position of game borders
     var bounds:Rectangle;
+        // Padding for each side
+    var padding:Rectangle;
         // columns in grid
     var gridx:Int;
         // rows in grid
@@ -38,6 +40,7 @@ class Main extends luxe.Game
     var snake:Visual;
         // List of snake's body blocks
     var snakeBodies:Array<Visual>;
+    var snakeBodiesMove:Array<Vector>;
 
     var menuScene:Scene;
 
@@ -48,10 +51,57 @@ class Main extends luxe.Game
 
     override function config(config:luxe.AppConfig):luxe.AppConfig
     {
-        config.window.width = 500;
-        config.window.height = 500;
+        trace(config.runtime);
+        if(config.runtime.window != null) {
+            if(config.runtime.window.width != null) {
+                config.window.width = Std.int(config.runtime.window.width);
+            }
+            if(config.runtime.window.height != null) {
+                config.window.height = Std.int(config.runtime.window.height);
+            }
+        }
         config.window.resizable = false;
-                
+
+
+
+
+        if(config.runtime.grid != null) {
+            if(config.runtime.grid.x != null) {
+                gridx = Std.int(config.runtime.grid.x);
+            }else{
+                gridx = 15;
+            }
+
+            if(config.runtime.grid.y != null) {
+                gridy = Std.int(config.runtime.grid.y);
+            }else{
+                gridy = 15;
+            }
+        }
+
+        padding = new Rectangle(10,10,10,10);
+        if(config.runtime.padding != null) {
+            padding.x = Std.parseFloat(config.runtime.padding.left);
+            padding.y = Std.parseFloat(config.runtime.padding.top);
+            padding.w = Std.parseFloat(config.runtime.padding.right);
+            padding.h = Std.parseFloat(config.runtime.padding.bottom);
+        }
+
+        bounds = new Rectangle(padding.x,padding.y,config.window.width - padding.w*2,config.window.height - padding.h*2);
+        if(config.runtime.boardSize != null) {
+            var bw:Float = Std.parseFloat(config.runtime.boardSize.w);
+            var bh:Float = Std.parseFloat(config.runtime.boardSize.h);
+            if(bw < 0.1) bw = 0.1;
+            if(bh < 0.1) bh = 0.1;
+            if(bw > 1) bw = 1;
+            if(bh > 1) bh = 1;
+
+            bounds.x = padding.x + config.window.width*(1-bw)/2;
+            bounds.y = padding.y + config.window.height*(1-bh)/2;
+            bounds.w = config.window.width*bw - padding.w*2;
+            bounds.h = config.window.height*bw - padding.h*2;
+        }
+
         return config;
     }
 
@@ -75,11 +125,23 @@ class Main extends luxe.Game
             gameOver();
         });
 
-        Luxe.events.listen('move', function(_){
-            for(i in snakeBodies)
+        Luxe.events.listen('move', function(_)
+        {
+            // Move every snake body (only body)
+            // snakeBodiesMove = new Array<Vector>();
+            var lastV:Vector = new Vector().copy_from(snake.pos);
+
+            for(i in 1...snakeBodies.length)
             {
-                
+                snakeBodiesMove[i].copy_from(snakeBodies[i-1].pos);
             }
+            snakeBodiesMove[0].copy_from(snake.pos);
+
+            for(i in 1...snakeBodies.length)
+            {
+                snakeBodies[i].pos.copy_from(snakeBodiesMove[i]);
+            }
+
         });
 
     } //ready
@@ -112,21 +174,16 @@ class Main extends luxe.Game
 
     function initGame():Void
     {
-
-        Luxe.scene.empty();
-
         snakeBodies = new Array<Visual>();
+        snakeBodiesMove = new Array<Vector>();
 
-        bounds = new Rectangle(0,0,Luxe.screen.w,Luxe.screen.h);
-        gridx = 15;
-        gridy = 15;
+
         cell = new Vector(bounds.w/gridx, bounds.h/gridy);
-        trace('cell = ${cell}');
 
         playing = false;
         score = 0;
 
-        initSnake( );
+        initSnake();
 
 
         welcomeText = new Text({
@@ -150,8 +207,19 @@ class Main extends luxe.Game
         drawGrid();
     }
 
+    function clearEverything()
+    {
+        Luxe.scene.empty();
+
+        welcomeText.destroy();
+        scoreText.destroy();
+
+    }
+
     function gameOver(){
         quit1();
+        clearEverything();
+        initGame();
     }
 
     function quit1():Void
@@ -195,8 +263,8 @@ class Main extends luxe.Game
         snake = new Visual({
             name: 'snakeHead',
             pos: new Vector(
-                Math.round(gridx/2)*cell.x - cell.x/2,
-                Math.round(gridy/2)*cell.y - cell.y/2
+                Math.round(gridx/2)*cell.x - cell.x/2 + padding.x,
+                Math.round(gridy/2)*cell.y - cell.y/2 + padding.y
             ),
             color: new Color().rgb(0x33ff33),
             geometry: Luxe.draw.circle({
@@ -204,24 +272,26 @@ class Main extends luxe.Game
                 start_angle: 35,
                 end_angle: 325
             }
-            // geometry: Luxe.draw.box({
-            //     x:-cell.x/2, y:-cell.y/2,
-            //     w: cell.x, h:cell.y
-            // }
             ),
             // scene: gameScene
         });
         snake.add( new SnakeHead({name:'head'}));
         snake.add( new HeadCollider({
             name:'collider',
-            hitbox:new Rectangle(-cell.x/2, -cell.y/2, cell.x, cell.y),
+            hitbox:new Rectangle(-cell.x*0.5/2, -cell.y*0.5/2, cell.x*0.5, cell.y*0.5),
         }));
         snakeBodies.push(snake);
+        snakeBodiesMove.push(new Vector(snake.pos.x, snake.pos.y));
 
 
             // First body ball
         addSnakeBody(snake.pos.x, snake.pos.y + cell.y);
+        addSnakeBody(snake.pos.x, snake.pos.y + cell.y*2);
+        addSnakeBody(snake.pos.x, snake.pos.y + cell.y*3);
     }
+
+
+
     function initTimer():Void
     {
         timer = new Timer(Luxe.core);
@@ -277,7 +347,6 @@ class Main extends luxe.Game
         scoreText.text = '${score}';
     }
 
-
     function randomVectorOnGrid():Vector{
         var vec:Vector = new Vector(
             (Math.floor( Math.random()*gridx )+1) *cell.x - cell.x/2 ,
@@ -299,7 +368,7 @@ class Main extends luxe.Game
             name:'item',
             name_unique: true,
             geometry:Luxe.draw.box({
-                x: -cell.x/2, y: -cell.y/2,
+                x: -cell.x/2 + padding.x, y: -cell.y/2 + padding.y,
                 w: cell.x, h: cell.y
             }),
             color: color,
@@ -307,7 +376,7 @@ class Main extends luxe.Game
         });
         item.add(new Collider({
             name:'collider',
-            hitbox: new Rectangle(-cell.x/2, -cell.y/2, cell.x, cell.y)
+            hitbox: new Rectangle(-cell.x/2, -cell.y/2, cell.x*0.8, cell.y*0.8)
         }));
 
     }
@@ -326,17 +395,18 @@ class Main extends luxe.Game
             name_unique: true,
             geometry:Luxe.draw.circle({
                 x: 0, y: 0,
-                r: cell.x/2
+                r: cell.x/2 * 0.9
             }),
             color: new Color().rgb(0x66ff66),
-            pos: new Vector(x, y + cell.y),
+            pos: new Vector(x, y),
         });
         snakeBody.add(new Collider({
             name:'collider',
-            hitbox: new Rectangle(-cell.x/2, -cell.y/2, cell.x, cell.y)
+            hitbox: new Rectangle(-cell.x*0.8/2, -cell.y*0.8/2, cell.x*0.8, cell.y*0.8)
         }));
 
         snakeBodies.push(snakeBody);
+        snakeBodiesMove.push(new Vector(snakeBody.pos.x, snakeBody.pos.y));
     }
 
 

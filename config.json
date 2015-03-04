@@ -1,0 +1,24 @@
+{
+
+    "window": {
+        "width": 600,
+        "height": 600
+    },
+
+    "grid": {
+        "x": 20,
+        "y": 20
+    },
+
+    "boardSize": {
+        "w": 1,
+        "h": 1
+    },
+
+    "padding": {
+        "top": 10,
+        "right": 10,
+        "bottom": 10,
+        "left": 10
+    }
+}

@@ -11,11 +11,15 @@ import luxe.Color;
 import luxe.collision.Collision;
 import luxe.Entity;
 import luxe.Rectangle;
+import luxe.Vector;
 
 class Collider extends Component
 {
 
     public var shape:Shape;
+
+    // Remember init options
+    var offset:Vector;
 
     var drawer:ShapeDrawerLuxe;
 
@@ -23,11 +27,13 @@ class Collider extends Component
     {
         super(_options);
 
+        offset = new Vector(_options.hitbox.x, _options.hitbox.y);
+
         shape = Polygon.rectangle(
-            _options.hitbox.x /2,
-            _options.hitbox.y /2,
-            _options.hitbox.w /2,
-            _options.hitbox.h /2
+            _options.hitbox.x,
+            _options.hitbox.y,
+            _options.hitbox.w,
+            _options.hitbox.h
         );
     }
 
@@ -41,8 +47,11 @@ class Collider extends Component
     override function update(rate:Float):Void
     {
         shape.position = entity.pos;
+        // shape.position.x += offset.x;
+        // shape.position.y += offset.y;
 
-        // drawer.drawPolygon( cast shape, new Color().rgb(0xff0000), true );
+
+        drawer.drawPolygon( cast shape, new Color().rgb(0xff0000), true );
     }
 
 }
